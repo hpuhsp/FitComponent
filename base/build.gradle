@@ -1,0 +1,56 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 27
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 27
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+/* 注：若引用其他三方库（如：dataBinding）存在apply plugin: 'kotlin-kapt'，需要在下面对应代码中添加"generateStubs = true"*/
+kapt {
+    generateStubs = true
+    arguments {
+        arg("moduleName", project.getName())
+    }
+}
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    //noinspection GradleCompatible
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    /*组件共同依赖的库也最好都放到Base中统一依赖*/
+
+    api project(':componentbase')
+    api 'com.alibaba:arouter-api:1.3.1'
+    kapt 'com.alibaba:arouter-compiler:1.1.4'
+
+    /* 注意:arouter-compiler 的依赖需要所有使用到 ARouter 的模块和组件中都单独添加，
+    不然无法在 apt 中生成索引文件，也就无法跳转成功。并且在每一个使用到 ARouter 的模块和组件的 build.gradle 文件中，
+    其 android{} 中的 javaCompileOptions 中也需要添加特定配置
+    arouter-compiler 的注解依赖需要所有使用 ARouter 的 module 都添加依赖
+    另外需要注意点：
+    kapt 可以替代annotationProcessor 注释java类
+    如果在build中使用kapt和annotationProcessor混合引用,可能会导致编译失败,需要全部替换为kapt*/
+}
